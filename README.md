@@ -29,7 +29,18 @@ Requires domain schemas to exist first; it's derive-first and useless standalone
 
 ## Install
 
-With the [skills CLI](https://github.com/vercel-labs/skills):
+As a Claude Code plugin — this repo is a plugin marketplace, and `steig-skills` carries
+both skills:
+
+```
+/plugin marketplace add steig/skills
+/plugin install steig-skills
+```
+
+The marketplace also lists `worktender` (worktree fleet skills, sourced from
+[steig/worktender](https://github.com/steig/worktender)).
+
+Alternatively, with the [skills CLI](https://github.com/vercel-labs/skills):
 
 ```bash
 npx skills add steig/skills --skill schema-driven -g

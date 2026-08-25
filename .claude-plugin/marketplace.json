@@ -1,0 +1,29 @@
+{
+  "$schema": "https://code.claude.com/schemas/marketplace.json",
+  "name": "steig",
+  "owner": {
+    "name": "Tom Steigerwald",
+    "url": "https://github.com/steig"
+  },
+  "description": "Free-standing skills from steig/skills plus tool-coupled plugins sourced from their own repos.",
+  "plugins": [
+    {
+      "name": "steig-skills",
+      "description": "Design-interview skills: schema-driven (SDD — pin the domain contracts before code) and view-driven (VDD — project those schemas onto UI archetypes).",
+      "source": "./",
+      "repository": "https://github.com/steig/skills",
+      "license": "MIT",
+      "keywords": ["sdd", "vdd", "design", "interview", "schemas"]
+    },
+    {
+      "name": "worktender",
+      "description": "Worktree fleet skills coupled to the worktender tool: worktrees (drive git worktrees as herdr workspaces) and coordinator (dispatch and verify work across staffed agents).",
+      "source": {
+        "source": "github",
+        "repo": "steig/worktender"
+      },
+      "repository": "https://github.com/steig/worktender",
+      "keywords": ["worktrees", "herdr", "coordinator", "agents"]
+    }
+  ]
+}
