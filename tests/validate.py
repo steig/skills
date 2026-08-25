@@ -75,9 +75,12 @@ if marketplace is not None:
             else:
                 check(source.get("source"), f"marketplace plugin {name}: source object needs a source type")
 
+SEMVER = re.compile(r"^\d+\.\d+\.\d+$")
+
 if plugin is not None:
     check(KEBAB.match(plugin.get("name", "")), "plugin: name must be kebab-case")
     check(plugin.get("description"), "plugin: description required")
+    check(SEMVER.match(plugin.get("version", "")), "plugin: version must be semver (X.Y.Z)")
     if marketplace is not None:
         entry = next((p for p in marketplace.get("plugins", []) if p.get("source") == "./"), None)
         check(entry is not None, "marketplace: no plugin entry sourced from this repo (./)")

@@ -1,7 +1,7 @@
 {
   "name": "steig-skills",
   "description": "Design-interview skills: schema-driven (SDD — pin the domain contracts before code) and view-driven (VDD — project those schemas onto UI archetypes).",
-  "version": "0.2.1",
+  "version": "0.2.3",
   "author": {
     "name": "Tom Steigerwald",
     "url": "https://github.com/steig"
