@@ -27,9 +27,11 @@ the floor — nothing below relaxes them.
    — merge order, redispatch races, split verification memory — do not.
 2. Rename this session to `fleet`. That name is the address: Tom and any
    session reach the controller by messaging `fleet`.
-3. Orient: `worktender ls --all-repos --reports --json`, ListAgents, and the
-   open PRs. The fleet is asked, never written down — the pull requests are
-   the durable record, your judgment is the only thing worth a handoff.
+3. Orient: replay the fleet ledger (see "The fleet ledger"), then
+   `worktender ls --all-repos --reports --json`, ListAgents, and the open
+   PRs. The ledger is the record of what the controller *decided*; the pull
+   requests stay the durable record of the *work*, and the world — PRs,
+   panes — is the fallback truth wherever the two disagree.
 
 Scope: **this machine only.** Cloud sessions and other machines are out of
 scope — a cloud session cannot message back, so it cannot report.
@@ -50,7 +52,9 @@ reports arrive as cross-session messages; `notify_when_idle` covers the rest.
 End the turn and wake on events. Because wakes interleave with Tom's own
 messages, **re-orient on every wake** before acting: fleet state
 (`ls --all-repos --reports --json`), ListAgents, and "what was I holding" —
-never trust the flow of one long turn.
+never trust the flow of one long turn. After a context clear, "what was I
+holding" comes from ledger replay (see "The fleet ledger") before anything
+else moves.
 
 A gate exit 4 warrants a pane read before the failure ladder: a worker
 stalled on a permission prompt is not dead. Keys within the safety ceiling
@@ -78,8 +82,8 @@ Keep inline, beyond `coordinator`'s list:
 
 - **Cross-repo synthesis** — anything needing simultaneous context from
   slices in two repos. Only the controller sees both.
-- **The fleet's own state** — dispatch ledger, task ids, deadlines, judgment.
-  Never delegated.
+- **The fleet's own state** — the fleet ledger, task ids, deadlines,
+  judgment. Never delegated: the controller is the ledger's sole writer.
 - **Machine state** — nixos-config rebuilds, `~/.claude` config, service
   containers — is not merely inline but **escalate-to-Tom-first**.
 
@@ -163,6 +167,68 @@ never read the diff, ask "did you run this or reason it".
   `.claude/settings.json`). A branch touching guard files it was not asked to
   touch is an **automatic escalation**, not a judgment call.
 
+## The fleet ledger
+
+Every controller event is written down **at the moment it happens** — the
+dispatch when it is sent, the ack/report when line one parses, the verify
+when the check returns, the escalation when it fires. The file is
+`~/.local/state/fleet/ledger.jsonl`: single append-only JSONL, machine-local
+(XDG state), in no repo, never synced. This is the fleet ledger contract v1
+(worktender#154, committed to worktender as `docs/fleet-ledger-contract.md`);
+the worktender board reads it — write for the board, don't render your own.
+The ledger is Tom's oversight record first and replay state second: entries
+should read as an audit trail, not just what a restart needs.
+
+**Envelope, every line:** `v` (int, `1`), `ts` (ISO8601), `task` (the
+controller-minted id, echoed by the peer contract), `type`, `by` (the
+controller session name — `fleet`). Per-type payload:
+
+- `dispatch` — executor (`worker|peer`), target, repo, issue, deadline
+- `ack` — `accepted|declined` (peers)
+- `report` — `done|blocked`, pr
+- `verify` — `pass|fail`, one-line evidence
+- `escalate` — severity (`safety|ordinary`), reason
+- `steer` — peer messages about work it owns
+- `nudge` — contract restatements
+- `deadline` — `set|expired|met`
+- `human` — Tom's decisions routed through the loop: `merge-executed`,
+  `escalation-acknowledged`, `permission-granted|denied`, `instruction`.
+  Ledger what you see; Tom's silent GitHub actions surface later via
+  `verify`, by design.
+
+Example lines:
+
+```
+{"v":1,"ts":"2026-08-25T17:04:11Z","task":"shopcrm-42","type":"dispatch","by":"fleet","executor":"worker","target":"wt/shopcrm/42","repo":"shopcrm","issue":42,"deadline":"2026-08-25T18:04:00Z"}
+{"v":1,"ts":"2026-08-25T17:41:02Z","task":"shopcrm-42","type":"report","by":"fleet","status":"done","pr":57}
+{"v":1,"ts":"2026-08-25T17:43:20Z","task":"shopcrm-42","type":"verify","by":"fleet","status":"pass","evidence":"gh pr checks 57: all green"}
+```
+
+**Writing — two MUSTs, no locking.** The controller is the sole writer, per
+the agent-presence lease (the same rule that makes the `fleet` name unique).
+Each entry MUST be one atomic `O_APPEND` write of ≤4KB ending in `\n` —
+one `printf '%s\n' "$json" >> ~/.local/state/fleet/ledger.jsonl` per entry,
+never a line built across writes, never a rewrite of the file. Readers MUST
+discard a final line lacking its newline (a write in flight). No per-line
+fsync: a crash may lose the tail, and replay tolerates that because the
+world (PRs, panes) is the fallback truth.
+
+**Replay — re-arming after a context clear.** An entry is *terminal* for its
+task when it is a `verify`, an `escalate` resolved by a `human` entry, or an
+`ack declined` followed by a reassignment `dispatch`. Scan back from the
+tail collecting tasks with no terminal entry — bounded at 7 days or the last
+`human` round-closed marker, whichever comes first. Open loops beyond the
+horizon surface **once** as a stale-loops digest rather than silently
+re-arming. Then reconcile before acting: the ledger says what *should* be in
+flight; `worktender ls --all-repos --reports --json` + ListAgents say what
+*is*. A standing report the ledger missed → parse and verify it now; a
+ledgered dispatch with no pane and no report → the failure ladder.
+
+**Versioning:** additive changes (new optional fields, new types) don't bump
+`v` — boards render unknown types raw and ignore unknown fields. Breaking
+changes bump `v`. Rotation is deferred by design (rename + fresh file);
+don't invent it.
+
 ## Safety ceiling
 
 **Free, without asking:** dispatch (including model and permission-mode
@@ -188,7 +254,12 @@ escalate before continuing. Authorization does not survive sessions.
 
 **Escalation is severity-split.** Safety anomalies — guard-file touches,
 events armed, boundary violations — interrupt immediately and individually,
-and dispatch pauses until Tom has seen them. Ordinary `blocked` workers batch
-into one digest per wake, one line each. DCG where present is
+and dispatch pauses until Tom has seen them. Each one is ledgered
+(`escalate` severity `safety`) **and additionally pushed through the
+harness push path** (PushNotification), so it reaches Tom even when he is
+away from the terminal. Ordinary `blocked` workers are ledgered severity
+`ordinary` and batch into one digest per wake, one line each —
+**digest-only, never pushed**; a push that cries ordinary teaches Tom to
+ignore the safety tier. DCG where present is
 defense-in-depth: never a dispatch precondition, never injected into a repo
 at dispatch.
