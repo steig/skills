@@ -9,7 +9,7 @@
   "plugins": [
     {
       "name": "steig-skills",
-      "description": "Design-interview skills: schema-driven (SDD — pin the domain contracts before code) and view-driven (VDD — project those schemas onto UI archetypes).",
+      "description": "Design-interview skills: schema-driven (SDD — pin the domain contracts before code), view-driven (VDD — project those schemas onto UI archetypes), and map-driven (run SDD-scale design as a Wayfinder ticket map — agents research, the human judges).",
       "source": "./",
       "repository": "https://github.com/steig/skills",
       "license": "MIT",
