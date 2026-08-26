@@ -5,6 +5,12 @@ description: Run Schema-Driven Development's completeness through a Wayfinder ma
 
 # Map-Driven Design
 
+> The Wayfinder methodology this skill builds on — maps, question-tickets, plan-don't-build — is
+> [Matt Pocock's `wayfinder` skill](https://github.com/mattpocock/skills/tree/main/skills/engineering/wayfinder)
+> (MIT), as practiced and extended across two real maps; the grilling discipline is his
+> `grilling`/`grill-me`. This skill is that execution model fused with schema-driven's
+> completeness machinery.
+
 The user is starting design work big enough that one interview sitting can't hold it: a system that needs schema-driven's 11-layer rigor, but across days, an existing codebase, or a fleet of agents. Instead of walking the layers in lockstep with a human present for all of it, chart a **map**: every unresolved design branch becomes a **ticket**, tickets are triaged by who can resolve them (agent research vs. live human judgment), dependency order becomes edges on a DAG, and a continuously-running validator spawns tickets for the gaps nobody thought to raise. The map plans; it doesn't build.
 
 The division of labor with the siblings is exact: **`schema-driven` supplies the *what*** (the 11 layers, their prompts, tiered formalization, the cross-reference checks) and **`view-driven` supplies the frontend *what*** (archetypes, state floor, experience-layer decisions). **This skill supplies the *how* and *when*.** Read the sibling SKILL.mds for interview content when posing a ticket — never duplicate their layer definitions; the projections this skill owns (triage table, ticket templates, check list) are below.

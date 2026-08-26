@@ -42,6 +42,11 @@ Refuses systems small enough to spec in one sitting — those get plain schema-d
 Designed by dogfooding itself: [steig/skills#20](https://github.com/steig/skills/issues/20)
 is the map that produced it.
 
+The Wayfinder side is built on
+[Matt Pocock's `wayfinder` skill](https://github.com/mattpocock/skills/tree/main/skills/engineering/wayfinder)
+(and his `grilling`/`grill-me` for the interview discipline) — the ticket-map methodology
+is his; this skill fuses it with SDD's completeness machinery.
+
 ## Install
 
 As a Claude Code plugin — this repo is a plugin marketplace, and `steig-skills` carries

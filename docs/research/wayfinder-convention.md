@@ -1,5 +1,9 @@
 # The Wayfinder convention, extracted from its two exemplars
 
+> Wayfinder originates as [Matt Pocock's `wayfinder` skill](https://github.com/mattpocock/skills/tree/main/skills/engineering/wayfinder)
+> (MIT). This doc codifies the convention *as practiced* in two local maps, which may
+> extend or diverge from his upstream skill.
+
 Resolves steig/skills#24. Sources read in full: the **GitHub-issues exemplar**
 (steig/herdrmux — map issue [#1](https://github.com/steig/herdrmux/issues/1), twelve
 tickets sampled across `wayfinder:research` / `wayfinder:grilling` / `wayfinder:task`
